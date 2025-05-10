@@ -193,29 +193,37 @@ class FileManager(QMainWindow):
     def copy_selected(self):
         path = self.get_selected_path()
         if path:
-            copy_item(path)
+            output = copy_item(path)
+            self.status.setText(output)
 
     def move_selected(self):
         path = self.get_selected_path()
         if path:
-            move_item(path)
+            output = move_item(path)
+            self.status.setText(output)
 
     def paste_selected(self):
-        paste_item(self.current_path, self, self.undo_redo)
+        output = paste_item(self.current_path, self, self.undo_redo)
 
         self.refresh()
+        self.status.setText(output)
 
     def delete_selected(self):
         path = self.get_selected_path()
         if path:
-            delete_item(path, self)
+            output = delete_item(path, self)
+
             self.refresh()
+            self.status.setText(output)
 
     def rename_selected(self):
         path = self.get_selected_path()
+
         if path:
-            rename_item(path, self, self.undo_redo)
+            output = rename_item(path, self, self.undo_redo)
+
             self.refresh()
+            self.status.setText(output)
 
     def undo_action(self):
         self.undo_redo.undo()
