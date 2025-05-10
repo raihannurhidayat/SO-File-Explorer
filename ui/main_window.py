@@ -21,6 +21,7 @@ from utils.file_ops import *
 from utils.history import ActionHistory
 from utils.utils import get_available_name, show_error
 
+
 class FileManager(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -90,7 +91,7 @@ class FileManager(QMainWindow):
         return self.model.filePath(index) if index.isValid() else None
 
     def go_back(self):
-        self.current_path = QDir(self.current_path).dirName()
+        self.current_path = os.path.dirname(self.current_path)
         self.tree.setRootIndex(self.model.index(self.current_path))
 
     def navigate(self, index):
