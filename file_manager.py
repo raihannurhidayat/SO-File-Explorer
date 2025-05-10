@@ -59,7 +59,7 @@ class FileManager(QMainWindow):
 
         # NAVIGATION ACTIONS
         self.back_action = QWidgetAction(self)
-        self.back_action.setIconText("◀")
+        self.back_action.setIconText("Back to previous location")
         self.back_action.setIcon(
             self.style().standardIcon(QStyle.SP_ArrowBack))
         self.back_action.triggered.connect(self.go_back)
@@ -67,7 +67,7 @@ class FileManager(QMainWindow):
         navbar.addAction(self.back_action)
 
         self.forward_action = QWidgetAction(self)
-        self.forward_action.setIconText("▶")
+        self.forward_action.setIconText("Forward to next location")
         self.forward_action.setIcon(
             self.style().standardIcon(QStyle.SP_ArrowForward)
         )
@@ -76,13 +76,13 @@ class FileManager(QMainWindow):
         navbar.addAction(self.forward_action)
 
         up_action = QWidgetAction(self)
-        up_action.setIconText("🔼")
+        up_action.setIconText("Go up one level")
         up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
         up_action.triggered.connect(self.go_up)
         navbar.addAction(up_action)
 
         refresh_action = QWidgetAction(self)
-        refresh_action.setIconText("🔄")
+        refresh_action.setIconText("Refresh")
         refresh_action.setIcon(
             self.style().standardIcon(QStyle.SP_BrowserReload))
         refresh_action.triggered.connect(self.refresh)
@@ -94,18 +94,26 @@ class FileManager(QMainWindow):
 
         # RIBBON ACTIONS
         copy_btn = ribbon.addAction("Copy")
+        copy_btn.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
         copy_btn.triggered.connect(self.copy_selected)
 
         move_btn = ribbon.addAction("Cut")
+        move_btn.setIcon(self.style().standardIcon(
+            QStyle.SP_ToolBarHorizontalExtensionButton))
         move_btn.triggered.connect(self.move_selected)
 
         paste_btn = ribbon.addAction("Paste")
+        paste_btn.setIcon(self.style().standardIcon(
+            QStyle.SP_TitleBarNormalButton))
         paste_btn.triggered.connect(self.paste_selected)
 
         delete_btn = ribbon.addAction("Delete")
+        delete_btn.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
         delete_btn.triggered.connect(self.delete_selected)
 
         rename_btn = ribbon.addAction("Rename")
+        rename_btn.setIcon(self.style().standardIcon(
+            QStyle.SP_FileDialogContentsView))
         rename_btn.triggered.connect(self.rename_selected)
 
     def navigate(self, index):
