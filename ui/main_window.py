@@ -20,8 +20,6 @@ from ui.dialogs import InputNameDialog
 from utils.file_ops import *
 from utils.history import ActionHistory
 from utils.utils import get_available_name, show_error
-from utils.models import FileSortProxyModel
-
 
 class FileManager(QMainWindow):
     def __init__(self):
@@ -31,7 +29,6 @@ class FileManager(QMainWindow):
         self.current_path = QDir.currentPath()
         self.clipboard = None
         self.history = ActionHistory()
-        self.proxy_model = FileSortProxyModel()
         self.init_ui()
 
     def init_ui(self):
@@ -68,12 +65,6 @@ class FileManager(QMainWindow):
         self.model = QFileSystemModel()
         self.model.setRootPath(self.current_path)
 
-        self.model = QFileSystemModel()
-        self.proxy_model.setSourceModel(self.model)
-        
-        self.tree = QTreeView()
-        self.tree.setModel(self.proxy_model)
-
         self.tree = QTreeView()
         self.tree.setModel(self.model)
         self.tree.setRootIndex(self.model.index(self.current_path))
@@ -82,12 +73,6 @@ class FileManager(QMainWindow):
         self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.open_context_menu)
-
-        self.tree.setSortingEnabled(True)
-        self.tree.setSortIndicatorShown(True)
-
-        self.tree.header().setSectionsClickable(True)
-        self.tree.header().sectionClicked.connect(self.handle_sort)
 
         main_layout.addLayout(toolbar)
         main_layout.addWidget(self.tree)
@@ -105,25 +90,11 @@ class FileManager(QMainWindow):
         return self.model.filePath(index) if index.isValid() else None
 
     def go_back(self):
-        self.current_path = os.path.dirname(self.current_path)
+        self.current_path = QDir(self.current_path).dirName()
         self.tree.setRootIndex(self.model.index(self.current_path))
 
-    def handle_sort(self, logical_index):
-        header = self.tree.header()
-        current_order = header.sortIndicatorOrder()
-        new_order = Qt.DescendingOrder if current_order == Qt.AscendingOrder else Qt.AscendingOrder
-        self.proxy_model.sort(logical_index, new_order)
-    
-    def get_selected_path(self):
-        index = self.tree.currentIndex()
-        if not index.isValid():
-            return None
-        source_index = self.proxy_model.mapToSource(index)
-        return self.model.filePath(source_index)
-
     def navigate(self, index):
-        source_index = self.proxy_model.mapToSource(index)
-        path = self.model.filePath(source_index)
+        path = self.model.filePath(index)
         if os.path.isdir(path):
             self.current_path = path
             self.tree.setRootIndex(self.model.index(self.current_path))
@@ -132,8 +103,7 @@ class FileManager(QMainWindow):
 
     def open_context_menu(self, position):
         index = self.tree.indexAt(position)
-        source_index = self.proxy_model.mapToSource(index)
-        if not source_index.isValid():
+        if not index.isValid():
             return
 
         path = self.model.filePath(index)
