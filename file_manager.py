@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QLineEdit, QToolBar, QWidgetAction, QStyle
 )
 from PySide6.QtCore import Qt
-from utils import open_file, show_error
+from utils import (open_file, show_error, copy_item,
+                   move_item, delete_item, paste_item, rename_item)
 
 
 class FileManager(QMainWindow):
@@ -20,43 +21,6 @@ class FileManager(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        toolbar = QToolBar()
-        self.addToolBar(toolbar)
-
-        self.back_action = QWidgetAction(self)
-        self.back_action.setIconText("◀")
-        self.back_action.setIcon(
-            self.style().standardIcon(QStyle.SP_ArrowBack))
-        self.back_action.triggered.connect(self.go_back)
-        self.back_action.setEnabled(False)
-        toolbar.addAction(self.back_action)
-
-        self.forward_action = QWidgetAction(self)
-        self.forward_action.setIconText("▶")
-        self.forward_action.setIcon(
-            self.style().standardIcon(QStyle.SP_ArrowForward)
-        )
-        self.forward_action.triggered.connect(self.go_forward)
-        self.forward_action.setEnabled(False)
-        toolbar.addAction(self.forward_action)
-
-        up_action = QWidgetAction(self)
-        up_action.setIconText("🔼")
-        up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
-        up_action.triggered.connect(self.go_up)
-        toolbar.addAction(up_action)
-
-        refresh_action = QWidgetAction(self)
-        refresh_action.setIconText("🔄")
-        refresh_action.setIcon(
-            self.style().standardIcon(QStyle.SP_BrowserReload))
-        refresh_action.triggered.connect(self.refresh)
-        toolbar.addAction(refresh_action)
-
-        self.path_input = QLineEdit(self.current_path)
-        self.path_input.returnPressed.connect(self.enter_path)
-        toolbar.addWidget(self.path_input)
-
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
@@ -75,6 +39,74 @@ class FileManager(QMainWindow):
 
         layout.addWidget(self.tree)
         layout.addWidget(self.status)
+
+        # NAVIGATION TOOLBAR
+        navbar = QToolBar()
+        navbar.setFloatable(False)
+        navbar.setMovable(False)
+        self.addToolBar(Qt.TopToolBarArea, navbar)
+        self.addToolBarBreak(Qt.TopToolBarArea)
+
+        # RIBBON TOOLBAR
+        ribbon = QToolBar("File Actions")
+        ribbon.setFloatable(False)
+        ribbon.setMovable(False)
+        self.addToolBar(Qt.TopToolBarArea, ribbon)
+
+        # CONTEXT MENU
+        self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.show_context_menu)
+
+        # NAVIGATION ACTIONS
+        self.back_action = QWidgetAction(self)
+        self.back_action.setIconText("◀")
+        self.back_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowBack))
+        self.back_action.triggered.connect(self.go_back)
+        self.back_action.setEnabled(False)
+        navbar.addAction(self.back_action)
+
+        self.forward_action = QWidgetAction(self)
+        self.forward_action.setIconText("▶")
+        self.forward_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowForward)
+        )
+        self.forward_action.triggered.connect(self.go_forward)
+        self.forward_action.setEnabled(False)
+        navbar.addAction(self.forward_action)
+
+        up_action = QWidgetAction(self)
+        up_action.setIconText("🔼")
+        up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
+        up_action.triggered.connect(self.go_up)
+        navbar.addAction(up_action)
+
+        refresh_action = QWidgetAction(self)
+        refresh_action.setIconText("🔄")
+        refresh_action.setIcon(
+            self.style().standardIcon(QStyle.SP_BrowserReload))
+        refresh_action.triggered.connect(self.refresh)
+        navbar.addAction(refresh_action)
+
+        self.path_input = QLineEdit(self.current_path)
+        self.path_input.returnPressed.connect(self.enter_path)
+        navbar.addWidget(self.path_input)
+
+        # RIBBON ACTIONS
+        copy_btn = ribbon.addAction("Copy")
+        copy_btn.triggered.connect(self.copy_selected)
+
+        move_btn = ribbon.addAction("Cut")
+        move_btn.triggered.connect(self.move_selected)
+
+        paste_btn = ribbon.addAction("Paste")
+        paste_btn.triggered.connect(self.paste_selected)
+
+        delete_btn = ribbon.addAction("Delete")
+        delete_btn.triggered.connect(self.delete_selected)
+
+        rename_btn = ribbon.addAction("Rename")
+        rename_btn.triggered.connect(self.rename_selected)
 
     def navigate(self, index):
         path = self.model.filePath(index)
@@ -134,3 +166,52 @@ class FileManager(QMainWindow):
     def update_buttons(self):
         self.back_action.setEnabled(len(self.back_stack) > 0)
         self.forward_action.setEnabled(len(self.forward_stack) > 0)
+
+    # FILE & FOLDER ACTIONS
+    def get_selected_path(self):
+        index = self.tree.currentIndex()
+        if index.isValid():
+            return self.model.filePath(index)
+        return None
+
+    def copy_selected(self):
+        path = self.get_selected_path()
+        if path:
+            copy_item(path)
+
+    def move_selected(self):
+        path = self.get_selected_path()
+        if path:
+            move_item(path)
+
+    def paste_selected(self):
+        paste_item(self.current_path, self)
+        self.refresh()
+
+    def delete_selected(self):
+        path = self.get_selected_path()
+        if path:
+            delete_item(path, self)
+            self.refresh()
+
+    def rename_selected(self):
+        path = self.get_selected_path()
+        if path:
+            rename_item(path, self)
+            self.refresh()
+
+    # CONTEXT MENU
+    def show_context_menu(self, position):
+        index = self.tree.indexAt(position)
+        if not index.isValid():
+            return
+
+        from PySide6.QtWidgets import QMenu
+
+        context_menu = QMenu()
+        context_menu.addAction("Copy", self.copy_selected)
+        context_menu.addAction("Cut", self.move_selected)
+        context_menu.addAction("Paste", self.paste_selected)
+        context_menu.addAction("Delete", self.delete_selected)
+        context_menu.addAction("Rename", self.rename_selected)
+        context_menu.exec(self.tree.viewport().mapToGlobal(position))
