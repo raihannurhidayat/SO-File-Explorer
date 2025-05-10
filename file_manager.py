@@ -1,7 +1,7 @@
 import os
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QFileSystemModel, QTreeView, QLabel,
-    QAbstractItemView, QLineEdit, QToolBar, QWidgetAction
+    QAbstractItemView, QLineEdit, QToolBar, QWidgetAction, QStyle
 )
 from PySide6.QtCore import Qt
 from utils import open_file, show_error
@@ -25,23 +25,31 @@ class FileManager(QMainWindow):
 
         self.back_action = QWidgetAction(self)
         self.back_action.setIconText("◀")
+        self.back_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowBack))
         self.back_action.triggered.connect(self.go_back)
         self.back_action.setEnabled(False)
         toolbar.addAction(self.back_action)
 
         self.forward_action = QWidgetAction(self)
         self.forward_action.setIconText("▶")
+        self.forward_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowForward)
+        )
         self.forward_action.triggered.connect(self.go_forward)
         self.forward_action.setEnabled(False)
         toolbar.addAction(self.forward_action)
 
         up_action = QWidgetAction(self)
         up_action.setIconText("🔼")
+        up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
         up_action.triggered.connect(self.go_up)
         toolbar.addAction(up_action)
 
         refresh_action = QWidgetAction(self)
         refresh_action.setIconText("🔄")
+        refresh_action.setIcon(
+            self.style().standardIcon(QStyle.SP_BrowserReload))
         refresh_action.triggered.connect(self.refresh)
         toolbar.addAction(refresh_action)
 
