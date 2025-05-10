@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from utils.history import HistoryManager
 from utils.navigation_utils import is_valid_directory, go_up
+from utils.undo import UndoRedoManager
 from utils.file_utils import (open_file, show_error, copy_item,
                               move_item, delete_item, paste_item, rename_item)
 
@@ -19,6 +20,7 @@ class FileManager(QMainWindow):
         self.current_path = os.getcwd()
 
         self.history = HistoryManager()
+        self.undo_redo = UndoRedoManager()
 
         self.init_ui()
 
@@ -118,6 +120,17 @@ class FileManager(QMainWindow):
             QStyle.SP_FileDialogContentsView))
         rename_btn.triggered.connect(self.rename_selected)
 
+        undo_btn = ribbon.addAction("Undo")
+        undo_btn.setIcon(self.style().standardIcon(
+            QStyle.SP_DialogCancelButton))
+        # undo_btn.setEnabled(False)
+        undo_btn.triggered.connect(self.undo_action)
+
+        redo_btn = ribbon.addAction("Redo")
+        redo_btn.setIcon(self.style().standardIcon(QStyle.SP_DialogOkButton))
+        # redo_btn.setEnabled(False)
+        redo_btn.triggered.connect(self.redo_action)
+
     def navigate(self, index):
         path = self.model.filePath(index)
         if os.path.isdir(path):
@@ -188,7 +201,8 @@ class FileManager(QMainWindow):
             move_item(path)
 
     def paste_selected(self):
-        paste_item(self.current_path, self)
+        paste_item(self.current_path, self, self.undo_redo)
+
         self.refresh()
 
     def delete_selected(self):
@@ -200,8 +214,16 @@ class FileManager(QMainWindow):
     def rename_selected(self):
         path = self.get_selected_path()
         if path:
-            rename_item(path, self)
+            rename_item(path, self, self.undo_redo)
             self.refresh()
+
+    def undo_action(self):
+        self.undo_redo.undo()
+        self.refresh()
+
+    def redo_action(self):
+        self.undo_redo.redo()
+        self.refresh()
 
     # CONTEXT MENU
     def show_context_menu(self, position):
