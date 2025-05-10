@@ -4,8 +4,10 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QLineEdit, QToolBar, QWidgetAction, QStyle
 )
 from PySide6.QtCore import Qt
-from utils import (open_file, show_error, copy_item,
-                   move_item, delete_item, paste_item, rename_item)
+from utils.history import HistoryManager
+from utils.navigation_utils import is_valid_directory, go_up
+from utils.file_utils import (open_file, show_error, copy_item,
+                              move_item, delete_item, paste_item, rename_item)
 
 
 class FileManager(QMainWindow):
@@ -15,8 +17,8 @@ class FileManager(QMainWindow):
         self.setGeometry(100, 100, 1000, 600)
 
         self.current_path = os.getcwd()
-        self.back_stack = []
-        self.forward_stack = []
+
+        self.history = HistoryManager()
 
         self.init_ui()
 
@@ -119,8 +121,7 @@ class FileManager(QMainWindow):
     def navigate(self, index):
         path = self.model.filePath(index)
         if os.path.isdir(path):
-            self.back_stack.append(self.current_path)
-            self.forward_stack.clear()
+            self.history.push_back(self.current_path)
             self.update_buttons()
             self.set_path(path)
         else:
@@ -139,41 +140,35 @@ class FileManager(QMainWindow):
     def enter_path(self):
         new_path = self.path_input.text()
         if os.path.isdir(new_path):
-            self.back_stack.append(self.current_path)
-            self.forward_stack.clear()
+            self.history.push_back(self.current_path)
             self.update_buttons()
             self.set_path(new_path)
         else:
             show_error(f"Invalid path: {new_path}", self)
 
-    def go_up(self):
-        parent = os.path.dirname(self.current_path)
-        if parent and parent != self.current_path:
-            self.back_stack.append(self.current_path)
-            self.forward_stack.clear()
-            self.update_buttons()
-            self.set_path(parent)
-
     def go_back(self):
-        if self.back_stack:
-            self.forward_stack.append(self.current_path)
-            self.current_path = self.back_stack.pop()
-            self.set_path(self.current_path)
+        if self.history.can_go_back():
+            self.set_path(self.history.go_back(self.current_path))
             self.update_buttons()
 
     def go_forward(self):
-        if self.forward_stack:
-            self.back_stack.append(self.current_path)
-            self.current_path = self.forward_stack.pop()
-            self.set_path(self.current_path)
+        if self.history.can_go_forward():
+            self.set_path(self.history.go_forward(self.current_path))
+            self.update_buttons()
+
+    def go_up(self):
+        parent = go_up(self.current_path)
+        if parent != self.current_path:
+            self.history.push_back(self.current_path)
+            self.set_path(parent)
             self.update_buttons()
 
     def refresh(self):
         self.set_path(self.current_path)
 
     def update_buttons(self):
-        self.back_action.setEnabled(len(self.back_stack) > 0)
-        self.forward_action.setEnabled(len(self.forward_stack) > 0)
+        self.back_action.setEnabled(len(self.history.back_stack) > 0)
+        self.forward_action.setEnabled(len(self.history.forward_stack) > 0)
 
     # FILE & FOLDER ACTIONS
     def get_selected_path(self):

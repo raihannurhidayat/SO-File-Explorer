@@ -2,7 +2,8 @@ import os
 import shutil
 import platform
 import subprocess
-from PySide6.QtWidgets import QMessageBox, QInputDialog
+from PySide6.QtWidgets import QInputDialog
+from utils.utils import show_error
 
 clipboard = {"action": None, "path": None}
 
@@ -17,10 +18,6 @@ def open_file(path, parent=None):
             subprocess.call(('xdg-open', path))
     except Exception as e:
         show_error(str(e), parent)
-
-
-def show_error(message, parent=None):
-    QMessageBox.critical(parent, "Error", message)
 
 
 def copy_item(path):
