@@ -155,35 +155,43 @@ class FileManager(QMainWindow):
         ribbon.addAction(new_file_action)
 
         copy_btn = ribbon.addAction("Copy")
-        copy_btn.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
+        copy_btn.setIconText("📚 Copy")
+        # copy_btn.setIcon(self.style().standardIcon(
+        #     QStyle.SP_DialogApplyButton)
         copy_btn.triggered.connect(self.copy_selected)
 
         move_btn = ribbon.addAction("Cut")
-        move_btn.setIcon(self.style().standardIcon(
-            QStyle.SP_DialogCloseButton))
+        move_btn.setIconText("✂️ Cut")
+        # move_btn.setIcon(self.style().standardIcon(
+        #     QStyle.SP_DialogCloseButton))
         move_btn.triggered.connect(self.move_selected)
 
         paste_btn = ribbon.addAction("Paste")
-        paste_btn.setIcon(self.style().standardIcon(
-            QStyle.SP_FileIcon))
+        paste_btn.setIconText("📋 Paste")
+        # paste_btn.setIcon(self.style().standardIcon(
+        #     QStyle.SP_FileIcon))
         paste_btn.triggered.connect(self.paste_selected)
 
         delete_btn = ribbon.addAction("Delete")
-        delete_btn.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
+        delete_btn.setIconText("🗑️ Delete")
+        # delete_btn.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
         delete_btn.triggered.connect(self.delete_selected)
 
         rename_btn = ribbon.addAction("Rename")
-        rename_btn.setIcon(self.style().standardIcon(
-            QStyle.SP_FileDialogContentsView))
+        rename_btn.setIconText("📝 Rename")
+        # rename_btn.setIcon(self.style().standardIcon(
+        #     QStyle.SP_FileDialogContentsView))
         rename_btn.triggered.connect(self.rename_selected)
 
         undo_btn = ribbon.addAction("Undo")
-        undo_btn.setIcon(self.style().standardIcon(
-            QStyle.SP_ArrowLeft))
+        undo_btn.setIconText("↻ Undo")
+        # undo_btn.setIcon(self.style().standardIcon(
+        #     QStyle.SP_ArrowLeft))
         undo_btn.triggered.connect(self.undo_action)
 
         redo_btn = ribbon.addAction("Redo")
-        redo_btn.setIcon(self.style().standardIcon(QStyle.SP_ArrowRight))
+        redo_btn.setIconText("↺ Redo")
+        # redo_btn.setIcon(self.style().standardIcon(QStyle.SP_ArrowRight))
         redo_btn.triggered.connect(self.redo_action)
 
     def navigate_to_path(self, path):
