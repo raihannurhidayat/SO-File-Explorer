@@ -10,7 +10,8 @@ from utils.history import HistoryManager
 from utils.navigation_utils import is_valid_directory, go_up
 from utils.undo import UndoRedoManager
 from utils.file_utils import (open_file, show_error, copy_item,
-                              move_item, delete_item, paste_item, rename_item)
+                              move_item, delete_item, paste_item, rename_item,
+                              create_new_file, create_new_folder)
 
 
 class FileManager(QMainWindow):
@@ -143,6 +144,16 @@ class FileManager(QMainWindow):
         navbar.addWidget(self.path_input)
 
         # RIBBON ACTIONS
+        new_folder_action = QWidgetAction(self)
+        new_folder_action.setIconText("📁 New Folder")
+        new_folder_action.triggered.connect(self.create_new_folder)
+        ribbon.addAction(new_folder_action)
+
+        new_file_action = QWidgetAction(self)
+        new_file_action.setIconText("📄 New File")
+        new_file_action.triggered.connect(self.create_new_file)
+        ribbon.addAction(new_file_action)
+
         copy_btn = ribbon.addAction("Copy")
         copy_btn.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
         copy_btn.triggered.connect(self.copy_selected)
@@ -287,6 +298,26 @@ class FileManager(QMainWindow):
             self.refresh()
             self.status.setText(output)
 
+    def create_new_folder(self):
+        target = self.get_selected_path() or self.current_path
+        if os.path.isfile(target):
+            target = os.path.dirname(target)
+        try:
+            create_new_folder(target)
+            self.refresh()
+        except Exception as e:
+            show_error(str(e), self)
+
+    def create_new_file(self):
+        target = self.get_selected_path() or self.current_path
+        if os.path.isfile(target):
+            target = os.path.dirname(target)
+        try:
+            create_new_file(target)
+            self.refresh()
+        except Exception as e:
+            show_error(str(e), self)
+
     def undo_action(self):
         self.undo_redo.undo()
         self.refresh()
@@ -330,5 +361,12 @@ class FileManager(QMainWindow):
         # These actions are always available
         context_menu.addAction("Paste", self.paste_selected)
         context_menu.addAction("Refresh", self.refresh)
+        context_menu.addSeparator()
+
+        # Actions for when clicking on an empty space
+        context_menu.addAction(
+            "New Folder", lambda: self.create_new_folder())
+        context_menu.addAction(
+            "New File", lambda: self.create_new_file())
 
         context_menu.exec(self.content_view.viewport().mapToGlobal(position))

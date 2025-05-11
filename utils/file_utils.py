@@ -139,3 +139,28 @@ def rename_item(path, parent=None, undo_redo=None):
 
         except Exception as e:
             show_error(str(e), parent)
+
+
+def create_new_folder(target_dir):
+    base_name = "New Folder"
+    folder_path = os.path.join(target_dir, base_name)
+    counter = 1
+
+    while os.path.exists(folder_path):
+        folder_path = os.path.join(target_dir, f"{base_name} {counter}")
+        counter += 1
+
+    os.makedirs(folder_path)
+
+
+def create_new_file(target_dir):
+    base_name = "New File.txt"
+    file_path = os.path.join(target_dir, base_name)
+    counter = 1
+
+    while os.path.exists(file_path):
+        file_path = os.path.join(target_dir, f"New File {counter}.txt")
+        counter += 1
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write("")  # Create an empty text file
