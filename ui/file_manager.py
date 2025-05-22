@@ -1,6 +1,14 @@
 class FileManager(QMainWindow):
     #! NAVIGATION TOOLBAR
     navbar = QToolBar()
+    
+
+    self.forward_action = QWidgetAction(self)
+    self.forward_action.setIconText("Forward")
+    self.forward_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
+    self.forward_action.triggered.connect(self.go_forward)
+    self.forward_action.setEnabled(False)
+    navbar.addAction(self.forward_action)
     navbar.setFloatable(False)
     navbar.setMovable(False)
     self.addToolBar(Qt.TopToolBarArea, navbar)
@@ -13,14 +21,7 @@ class FileManager(QMainWindow):
     self.back_action.triggered.connect(self.go_back)
     self.back_action.setEnabled(False)
     navbar.addAction(self.back_action)
-
-    self.forward_action = QWidgetAction(self)
-    self.forward_action.setIconText("Forward")
-    self.forward_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
-    self.forward_action.triggered.connect(self.go_forward)
-    self.forward_action.setEnabled(False)
-    navbar.addAction(self.forward_action)
-
+    
     up_action = QWidgetAction(self)
     up_action.setIconText("Up")
     up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
