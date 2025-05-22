@@ -10,8 +10,8 @@ from utils.history import HistoryManager
 from utils.navigation_utils import is_valid_directory, go_up
 from utils.undo import UndoRedoManager
 from utils.file_utils import (open_file, show_error, copy_item,
-                              move_item, delete_item, paste_item, rename_item,
-                              create_new_file, create_new_folder)
+                            move_item, delete_item, paste_item, rename_item,
+                            create_new_file, create_new_folder)
 
 
 class FileManager(QMainWindow):
