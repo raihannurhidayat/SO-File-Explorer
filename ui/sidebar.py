@@ -1,7 +1,11 @@
 # sidebar.py
 import os
 from PySide6.QtWidgets import (
-    QTreeView, QFileSystemModel, QMenu, QAbstractItemView, QSizePolicy
+    QTreeView,
+    QFileSystemModel,
+    QMenu,
+    QAbstractItemView,
+    QSizePolicy,
 )
 from PySide6.QtCore import Signal, QObject, Qt, QDir
 from utils.navigation_utils import show_error
@@ -43,6 +47,7 @@ class Sidebar(QObject):
         # Set the minimum width for the sidebar
         self.tree.setMinimumWidth(200)
 
+        self.tree.setIndentation(10)
         # Expand the drives by default
         self.tree.expandToDepth(0)
 
