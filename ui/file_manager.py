@@ -1,3 +1,16 @@
+import os
+from PySide6.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFileSystemModel, QTreeView, QLabel,
+    QAbstractItemView, QLineEdit, QToolBar, QWidgetAction, QStyle, QSplitter, QHeaderView, QSizePolicy
+)
+from PySide6.QtCore import Qt, QSize, QDir
+from ui.sidebar import Sidebar
+
+from utils.history import HistoryManager
+from utils.navigation_utils import is_valid_directory, go_up
+from utils.undo import UndoRedoManager
+
+
 class FileManager(QMainWindow):
     #! NAVIGATION TOOLBAR
     navbar = QToolBar()
