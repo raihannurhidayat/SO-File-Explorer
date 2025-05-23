@@ -139,43 +139,43 @@ class FileManager(QMainWindow):
         self.path_input.returnPressed.connect(self.enter_path)
         navbar.addWidget(self.path_input)
 
-    # RIBBON ACTIONS
-    new_folder_action = QWidgetAction(self)
-    new_folder_action.setIconText("📁 New Folder")
-    new_folder_action.triggered.connect(self.create_new_folder)
-    ribbon.addAction(new_folder_action)
+        # RIBBON ACTIONS
+        new_folder_action = QWidgetAction(self)
+        new_folder_action.setIconText("📁 New Folder")
+        new_folder_action.triggered.connect(self.create_new_folder)
+        ribbon.addAction(new_folder_action)
 
-    new_file_action = QWidgetAction(self)
-    new_file_action.setIconText("📄 New File")
-    new_file_action.triggered.connect(self.create_new_file)
-    ribbon.addAction(new_file_action)
+        new_file_action = QWidgetAction(self)
+        new_file_action.setIconText("📄 New File")
+        new_file_action.triggered.connect(self.create_new_file)
+        ribbon.addAction(new_file_action)
 
-    copy_btn = ribbon.addAction("Copy")
-    copy_btn.setIconText("📚 Copy")
-    copy_btn.triggered.connect(self.copy_selected)
+        copy_btn = ribbon.addAction("Copy")
+        copy_btn.setIconText("📚 Copy")
+        copy_btn.triggered.connect(self.copy_selected)
 
-    move_btn = ribbon.addAction("Cut")
-    move_btn.setIconText("✂️ Cut")
-    move_btn.triggered.connect(self.move_selected)
+        move_btn = ribbon.addAction("Cut")
+        move_btn.setIconText("✂️ Cut")
+        move_btn.triggered.connect(self.move_selected)
 
-    paste_btn = ribbon.addAction("Paste")
-    paste_btn.setIconText("📋 Paste")
-    paste_btn.triggered.connect(self.paste_selected)
-    delete_btn = ribbon.addAction("Delete")
-    delete_btn.setIconText("🗑️ Delete")
-    delete_btn.triggered.connect(self.delete_selected)
+        paste_btn = ribbon.addAction("Paste")
+        paste_btn.setIconText("📋 Paste")
+        paste_btn.triggered.connect(self.paste_selected)
+        delete_btn = ribbon.addAction("Delete")
+        delete_btn.setIconText("🗑️ Delete")
+        delete_btn.triggered.connect(self.delete_selected)
 
-    rename_btn = ribbon.addAction("Rename")
-    rename_btn.setIconText("📝 Rename")
-    rename_btn.triggered.connect(self.rename_selected)
+        rename_btn = ribbon.addAction("Rename")
+        rename_btn.setIconText("📝 Rename")
+        rename_btn.triggered.connect(self.rename_selected)
 
-    undo_btn = ribbon.addAction("Undo")
-    undo_btn.setIconText("↻ Undo")
-    undo_btn.triggered.connect(self.undo_action)
+        undo_btn = ribbon.addAction("Undo")
+        undo_btn.setIconText("↻ Undo")
+        undo_btn.triggered.connect(self.undo_action)
 
-    redo_btn = ribbon.addAction("Redo")
-    redo_btn.setIconText("↺ Redo")
-    redo_btn.triggered.connect(self.redo_action)
+        redo_btn = ribbon.addAction("Redo")
+        redo_btn.setIconText("↺ Redo")
+        redo_btn.triggered.connect(self.redo_action)
 
     def navigate_to_path(self, path):
         """Navigate when a path is selected from the sidebar"""
