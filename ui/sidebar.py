@@ -40,6 +40,7 @@ class Sidebar(QObject):
 
         self.tree.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.show_context_menu)
         self.tree.clicked.connect(self._emit_path_selected)
 
         # Set the minimum width for the sidebar
@@ -84,6 +85,19 @@ class Sidebar(QObject):
         if index.isValid():
             return self.model.filePath(index)
         return None
+
+    def show_context_menu(self, position):
+        index = self.tree.indexAt(position)
+        if not index.isValid():
+            return
+
+        menu = QMenu()
+        menu.addAction("Copy", lambda: self.parent.copy_selected())
+        menu.addAction("Cut", lambda: self.parent.move_selected())
+        menu.addAction("Paste", lambda: self.parent.paste_selected())
+        menu.addAction("Delete", lambda: self.parent.delete_selected())
+        menu.addAction("Rename", lambda: self.parent.rename_selected())
+        menu.exec(self.tree.viewport().mapToGlobal(position))
 
     def _emit_path_selected(self, index):
         path = self.model.filePath(index)
