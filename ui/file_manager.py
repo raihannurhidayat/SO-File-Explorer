@@ -12,9 +12,84 @@ from utils.undo import UndoRedoManager
 
 
 class FileManager(QMainWindow):
-    #! NAVIGATION TOOLBAR
-    navbar = QToolBar()
-    
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Python File Explorer")
+        self.setGeometry(100, 100, 1100, 600)
+
+        self.current_path = os.getcwd()
+
+        self.history = HistoryManager()
+        self.undo_redo = UndoRedoManager()
+
+        self.init_ui()
+
+    def init_ui(self):
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        # Remove margins for a cleaner look
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # Create horizontal splitter for sidebar and content area
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        main_layout.addWidget(splitter, 1)
+
+        # Left side - tree view navigation that shows the entire drive hierarchy
+        self.sidebar = Sidebar(self.current_path, parent=self)
+        self.sidebar.path_selected.connect(self.navigate_to_path)
+        self.sidebar.tree.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        splitter.addWidget(self.sidebar.tree)
+
+        # Right side - content view
+        content_widget = QWidget()
+        content_widget.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        content_layout.setSpacing(0)
+        splitter.addWidget(content_widget)
+
+        # File view for the current directory
+        self.content_model = QFileSystemModel()
+        self.content_model.setRootPath(self.current_path)
+
+        self.content_view = QTreeView()
+        self.content_view.setModel(self.content_model)
+        self.content_view.setRootIndex(
+            self.content_model.index(self.current_path))
+        self.content_view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.content_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.content_view.doubleClicked.connect(self.content_item_activated)
+        self.content_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.content_view.customContextMenuRequested.connect(
+            self.show_content_context_menu)
+
+        # Adjust column widths for content view
+        self.content_view.header().setSectionResizeMode(
+            0, QHeaderView.Stretch)  # Name column stretches
+        self.content_view.header().setSectionResizeMode(
+            1, QHeaderView.ResizeToContents)  # Size column
+        self.content_view.header().setSectionResizeMode(
+            2, QHeaderView.ResizeToContents)  # Type column
+        self.content_view.header().setSectionResizeMode(
+            3, QHeaderView.ResizeToContents)  # Date column
+
+        content_layout.addWidget(self.content_view)
+
+        # Status bar for messages
+        self.status = QLabel("Ready")
+        self.status.setMargin(3)
+        self.status.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setContentsMargins(5, 5, 5, 5)
+        self.status.setFixedHeight(28)
+        main_layout.addWidget(self.status, 0)
+
+        # Set the starting splitter position
+        splitter.setSizes([250, 950])
 
     self.forward_action = QWidgetAction(self)
     self.forward_action.setIconText("Forward")
@@ -95,15 +170,54 @@ class FileManager(QMainWindow):
     redo_btn.setIconText("↺ Redo")
     redo_btn.triggered.connect(self.redo_action)
 
+    def navigate_to_path(self, path):
+        """Navigate when a path is selected from the sidebar"""
+        if os.path.isdir(path):
+            self.history.push_back(self.current_path)
+            self.update_buttons()
+            self.set_path(path)
+        else:
+            open_file(path, self)
+
+    def content_item_activated(self, index):
+        """Handle double-click on content view items"""
+        path = self.content_model.filePath(index)
+        if os.path.isdir(path):
+            self.history.push_back(self.current_path)
+            self.update_buttons()
+            self.set_path(path)
+        else:
+            open_file(path, self)
+
+    def set_path(self, path):
+        """Set the current path and update both views"""
+        if os.path.exists(path):
+            self.current_path = path
+
+            # Update sidebar selection (this won't change the root, just highlight the folder)
+            self.sidebar.set_root_path(path)
+
+            # Update content view
+            self.content_view.setRootIndex(self.content_model.index(path))
+
+            # Update path display
+            self.path_input.setText(path)
+            self.status.setText(f"Opened: {path}")
+        else:
+            show_error(f"Path does not exist: {path}", self)
+
+
+    def refresh(self):
+        # Force QFileSystemModel to refresh
+        self.content_model.setRootPath("")
+        self.content_model.setRootPath(self.current_path)
+        self.set_path(self.current_path)
+
     # FILE & FOLDER ACTIONS
     def get_selected_path(self):
         """Get selected path from the content view (primary) or sidebar (fallback)"""
         selected_indexes = self.content_view.selectedIndexes()
-        if (
-            selected_indexes
-            and selected_indexes[0].isValid()
-            and selected_indexes[0].column() == 0
-        ):
+        if selected_indexes and selected_indexes[0].isValid() and selected_indexes[0].column() == 0:
             return self.content_model.filePath(selected_indexes[0])
         else:
             return self.sidebar.get_selected_path()
