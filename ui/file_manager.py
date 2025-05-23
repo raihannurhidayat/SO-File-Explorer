@@ -91,46 +91,53 @@ class FileManager(QMainWindow):
         # Set the starting splitter position
         splitter.setSizes([250, 950])
 
-    self.forward_action = QWidgetAction(self)
-    self.forward_action.setIconText("Forward")
-    self.forward_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
-    self.forward_action.triggered.connect(self.go_forward)
-    self.forward_action.setEnabled(False)
-    navbar.addAction(self.forward_action)
-    navbar.setFloatable(False)
-    navbar.setMovable(False)
-    self.addToolBar(Qt.TopToolBarArea, navbar)
-    self.addToolBarBreak(Qt.TopToolBarArea)
+        #! NAVIGATION TOOLBAR
+        navbar = QToolBar()
+        navbar.setFloatable(False)
+        navbar.setMovable(False)
+        self.addToolBar(Qt.TopToolBarArea, navbar)
+        self.addToolBarBreak(Qt.TopToolBarArea)
 
-    # NAVIGATION ACTIONS
-    self.back_action = QWidgetAction(self)
-    self.back_action.setIconText("Back")
-    self.back_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
-    self.back_action.triggered.connect(self.go_back)
-    self.back_action.setEnabled(False)
-    navbar.addAction(self.back_action)
-    
-    up_action = QWidgetAction(self)
-    up_action.setIconText("Up")
-    up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
-    up_action.triggered.connect(self.go_up)
-    navbar.addAction(up_action)
+        # RIBBON TOOLBAR
+        ribbon = QToolBar("File Actions")
+        ribbon.setFloatable(False)
+        ribbon.setMovable(False)
+        self.addToolBar(Qt.TopToolBarArea, ribbon)
 
-    refresh_action = QWidgetAction(self)
-    refresh_action.setIconText("Refresh")
-    refresh_action.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
-    refresh_action.triggered.connect(self.refresh)
-    navbar.addAction(refresh_action)
+        # NAVIGATION ACTIONS
+        self.back_action = QWidgetAction(self)
+        self.back_action.setIconText("Back")
+        self.back_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowBack))
+        self.back_action.triggered.connect(self.go_back)
+        self.back_action.setEnabled(False)
+        navbar.addAction(self.back_action)
 
-    self.path_input = QLineEdit(self.current_path)
-    self.path_input.returnPressed.connect(self.enter_path)
-    navbar.addWidget(self.path_input)
+        self.forward_action = QWidgetAction(self)
+        self.forward_action.setIconText("Forward")
+        self.forward_action.setIcon(
+            self.style().standardIcon(QStyle.SP_ArrowForward)
+        )
+        self.forward_action.triggered.connect(self.go_forward)
+        self.forward_action.setEnabled(False)
+        navbar.addAction(self.forward_action)
 
-    # RIBBON TOOLBAR
-    ribbon = QToolBar("File Actions")
-    ribbon.setFloatable(False)
-    ribbon.setMovable(False)
-    self.addToolBar(Qt.TopToolBarArea, ribbon)
+        up_action = QWidgetAction(self)
+        up_action.setIconText("Up")
+        up_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
+        up_action.triggered.connect(self.go_up)
+        navbar.addAction(up_action)
+
+        refresh_action = QWidgetAction(self)
+        refresh_action.setIconText("Refresh")
+        refresh_action.setIcon(
+            self.style().standardIcon(QStyle.SP_BrowserReload))
+        refresh_action.triggered.connect(self.refresh)
+        navbar.addAction(refresh_action)
+
+        self.path_input = QLineEdit(self.current_path)
+        self.path_input.returnPressed.connect(self.enter_path)
+        navbar.addWidget(self.path_input)
 
     # RIBBON ACTIONS
     new_folder_action = QWidgetAction(self)
@@ -206,12 +213,41 @@ class FileManager(QMainWindow):
         else:
             show_error(f"Path does not exist: {path}", self)
 
+    def enter_path(self):
+        new_path = self.path_input.text()
+        if os.path.isdir(new_path):
+            self.history.push_back(self.current_path)
+            self.update_buttons()
+            self.set_path(new_path)
+        else:
+            show_error(f"Invalid path: {new_path}", self)
+
+    def go_back(self):
+        if self.history.can_go_back():
+            self.set_path(self.history.go_back(self.current_path))
+            self.update_buttons()
+
+    def go_forward(self):
+        if self.history.can_go_forward():
+            self.set_path(self.history.go_forward(self.current_path))
+            self.update_buttons()
+
+    def go_up(self):
+        parent = go_up(self.current_path)
+        if parent != self.current_path:
+            self.history.push_back(self.current_path)
+            self.set_path(parent)
+            self.update_buttons()
 
     def refresh(self):
         # Force QFileSystemModel to refresh
         self.content_model.setRootPath("")
         self.content_model.setRootPath(self.current_path)
         self.set_path(self.current_path)
+
+    def update_buttons(self):
+        self.back_action.setEnabled(len(self.history.back_stack) > 0)
+        self.forward_action.setEnabled(len(self.history.forward_stack) > 0)
 
     # FILE & FOLDER ACTIONS
     def get_selected_path(self):
