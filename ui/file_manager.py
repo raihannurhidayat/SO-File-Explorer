@@ -1,7 +1,20 @@
 import os
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFileSystemModel, QTreeView, QLabel,
-    QAbstractItemView, QLineEdit, QToolBar, QWidgetAction, QStyle, QSplitter, QHeaderView, QSizePolicy
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFileSystemModel,
+    QTreeView,
+    QLabel,
+    QAbstractItemView,
+    QLineEdit,
+    QToolBar,
+    QWidgetAction,
+    QStyle,
+    QSplitter,
+    QHeaderView,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt, QSize, QDir
 from ui.sidebar import Sidebar
@@ -40,14 +53,12 @@ class FileManager(QMainWindow):
         # Left side - tree view navigation that shows the entire drive hierarchy
         self.sidebar = Sidebar(self.current_path, parent=self)
         self.sidebar.path_selected.connect(self.navigate_to_path)
-        self.sidebar.tree.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.sidebar.tree.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         splitter.addWidget(self.sidebar.tree)
 
         # Right side - content view
         content_widget = QWidget()
-        content_widget.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        content_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         content_layout = QVBoxLayout(content_widget)
         content_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
         content_layout.setSpacing(0)
@@ -59,24 +70,28 @@ class FileManager(QMainWindow):
 
         self.content_view = QTreeView()
         self.content_view.setModel(self.content_model)
-        self.content_view.setRootIndex(
-            self.content_model.index(self.current_path))
+        self.content_view.setRootIndex(self.content_model.index(self.current_path))
         self.content_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.content_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.content_view.doubleClicked.connect(self.content_item_activated)
         self.content_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.content_view.customContextMenuRequested.connect(
-            self.show_content_context_menu)
+            self.show_content_context_menu
+        )
 
         # Adjust column widths for content view
         self.content_view.header().setSectionResizeMode(
-            0, QHeaderView.Stretch)  # Name column stretches
+            0, QHeaderView.Stretch
+        )  # Name column stretches
         self.content_view.header().setSectionResizeMode(
-            1, QHeaderView.ResizeToContents)  # Size column
+            1, QHeaderView.ResizeToContents
+        )  # Size column
         self.content_view.header().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents)  # Type column
+            2, QHeaderView.ResizeToContents
+        )  # Type column
         self.content_view.header().setSectionResizeMode(
-            3, QHeaderView.ResizeToContents)  # Date column
+            3, QHeaderView.ResizeToContents
+        )  # Date column
 
         content_layout.addWidget(self.content_view)
 
@@ -107,17 +122,14 @@ class FileManager(QMainWindow):
         # NAVIGATION ACTIONS
         self.back_action = QWidgetAction(self)
         self.back_action.setIconText("Back")
-        self.back_action.setIcon(
-            self.style().standardIcon(QStyle.SP_ArrowBack))
+        self.back_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
         self.back_action.triggered.connect(self.go_back)
         self.back_action.setEnabled(False)
         navbar.addAction(self.back_action)
 
         self.forward_action = QWidgetAction(self)
         self.forward_action.setIconText("Forward")
-        self.forward_action.setIcon(
-            self.style().standardIcon(QStyle.SP_ArrowForward)
-        )
+        self.forward_action.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
         self.forward_action.triggered.connect(self.go_forward)
         self.forward_action.setEnabled(False)
         navbar.addAction(self.forward_action)
@@ -130,8 +142,7 @@ class FileManager(QMainWindow):
 
         refresh_action = QWidgetAction(self)
         refresh_action.setIconText("Refresh")
-        refresh_action.setIcon(
-            self.style().standardIcon(QStyle.SP_BrowserReload))
+        refresh_action.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
         refresh_action.triggered.connect(self.refresh)
         navbar.addAction(refresh_action)
 
@@ -249,11 +260,60 @@ class FileManager(QMainWindow):
         self.back_action.setEnabled(len(self.history.back_stack) > 0)
         self.forward_action.setEnabled(len(self.history.forward_stack) > 0)
 
+        # CONTEXT MENU
+
+    def show_context_menu(self, position):
+        """Sidebar context menu (kept for backward compatibility)"""
+        index = self.sidebar.tree.indexAt(position)
+        if not index.isValid():
+            return
+
+        from PySide6.QtWidgets import QMenu
+
+        context_menu = QMenu()
+        context_menu.addAction("Copy", self.copy_selected)
+        context_menu.addAction("Cut", self.move_selected)
+        context_menu.addAction("Paste", self.paste_selected)
+        context_menu.addAction("Delete", self.delete_selected)
+        context_menu.addAction("Rename", self.rename_selected)
+        context_menu.exec(self.sidebar.tree.viewport().mapToGlobal(position))
+
+    def show_content_context_menu(self, position):
+        """Context menu for content view items"""
+        index = self.content_view.indexAt(position)
+
+        from PySide6.QtWidgets import QMenu
+
+        context_menu = QMenu()
+
+        if index.isValid():
+            # Actions for when clicking on an item
+            context_menu.addAction("Copy", self.copy_selected)
+            context_menu.addAction("Cut", self.move_selected)
+            context_menu.addAction("Delete", self.delete_selected)
+            context_menu.addAction("Rename", self.rename_selected)
+            context_menu.addSeparator()
+
+        # These actions are always available
+        context_menu.addAction("Paste", self.paste_selected)
+        context_menu.addAction("Refresh", self.refresh)
+        context_menu.addSeparator()
+
+        # Actions for when clicking on an empty space
+        context_menu.addAction("New Folder", lambda: self.create_new_folder())
+        context_menu.addAction("New File", lambda: self.create_new_file())
+
+        context_menu.exec(self.content_view.viewport().mapToGlobal(position))
+
     # FILE & FOLDER ACTIONS
     def get_selected_path(self):
         """Get selected path from the content view (primary) or sidebar (fallback)"""
         selected_indexes = self.content_view.selectedIndexes()
-        if selected_indexes and selected_indexes[0].isValid() and selected_indexes[0].column() == 0:
+        if (
+            selected_indexes
+            and selected_indexes[0].isValid()
+            and selected_indexes[0].column() == 0
+        ):
             return self.content_model.filePath(selected_indexes[0])
         else:
             return self.sidebar.get_selected_path()
@@ -316,47 +376,3 @@ class FileManager(QMainWindow):
     def redo_action(self):
         self.undo_redo.redo()
         self.refresh()
-
-    # CONTEXT MENU
-    def show_context_menu(self, position):
-        """Sidebar context menu (kept for backward compatibility)"""
-        index = self.sidebar.tree.indexAt(position)
-        if not index.isValid():
-            return
-
-        from PySide6.QtWidgets import QMenu
-
-        context_menu = QMenu()
-        context_menu.addAction("Copy", self.copy_selected)
-        context_menu.addAction("Cut", self.move_selected)
-        context_menu.addAction("Paste", self.paste_selected)
-        context_menu.addAction("Delete", self.delete_selected)
-        context_menu.addAction("Rename", self.rename_selected)
-        context_menu.exec(self.sidebar.tree.viewport().mapToGlobal(position))
-
-    def show_content_context_menu(self, position):
-        """Context menu for content view items"""
-        index = self.content_view.indexAt(position)
-
-        from PySide6.QtWidgets import QMenu
-
-        context_menu = QMenu()
-
-        if index.isValid():
-            # Actions for when clicking on an item
-            context_menu.addAction("Copy", self.copy_selected)
-            context_menu.addAction("Cut", self.move_selected)
-            context_menu.addAction("Delete", self.delete_selected)
-            context_menu.addAction("Rename", self.rename_selected)
-            context_menu.addSeparator()
-
-        # These actions are always available
-        context_menu.addAction("Paste", self.paste_selected)
-        context_menu.addAction("Refresh", self.refresh)
-        context_menu.addSeparator()
-
-        # Actions for when clicking on an empty space
-        context_menu.addAction("New Folder", lambda: self.create_new_folder())
-        context_menu.addAction("New File", lambda: self.create_new_file())
-
-        context_menu.exec(self.content_view.viewport().mapToGlobal(position))
